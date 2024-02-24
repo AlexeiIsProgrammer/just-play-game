@@ -1,12 +1,13 @@
-import { useAppDispatch } from '../../redux';
-import { createSession } from '../../redux/slices/userSlice';
+import { useAppDispatch, useAppSelector } from '../../redux';
+import { createSession, userSelector } from '../../redux/slices/userSlice';
 import { Box, Button, Heading } from '@chakra-ui/react';
 
 function SeaBattleStart() {
   const dispatch = useAppDispatch();
+  const { name } = useAppSelector(userSelector);
 
   const createSeaBattleSessionHandle = () => {
-    dispatch(createSession('sea'));
+    dispatch(createSession({ type: 'sea', name }));
   };
 
   return (

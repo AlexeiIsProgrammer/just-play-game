@@ -25,14 +25,16 @@ import { useEffect, useState } from 'react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import { userSelector } from '../../redux/slices/userSlice';
 
 function GamesSlider() {
   const dispatch = useAppDispatch();
+  const { name } = useAppSelector(userSelector);
   const { sessions } = useAppSelector(controllerSelector);
   const [swiper, setSwiper] = useState<any>();
 
   const joinSessionHandle = (sessionId: string) => {
-    dispatch(joinSession(sessionId));
+    dispatch(joinSession({ session: sessionId, name }));
   };
 
   useEffect(() => {
@@ -69,7 +71,9 @@ function GamesSlider() {
                   justifyContent="space-between"
                 >
                   <Stack direction="row" alignItems="center">
-                    <Text>Game #{ind + 1}</Text>
+                    <Text>
+                      {session.users[0].name} game #{ind + 1}
+                    </Text>
                     {session.type === 'ttt' ? (
                       <Image
                         boxSize="20px"

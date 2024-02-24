@@ -6,6 +6,7 @@ import { startListening, userSelector } from '../redux/slices/userSlice';
 import GamesPanel from '../components/GamesPanel';
 import TicTacToe from '../components/TicTacToe';
 import SeaBattle from '../components/SeaBattle';
+import NameModal from '../components/NameModal';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -16,28 +17,31 @@ function App() {
   }, []);
 
   return (
-    <Container
-      display="flex"
-      flexDirection="column"
-      justifyContent="center"
-      h="100%"
-      maxW="1280px"
-      bg="blue.600"
-      color="white"
-    >
-      {session ? (
-        session.type === 'ttt' ? (
-          <TicTacToe />
+    <>
+      <NameModal />
+      <Container
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        h="100%"
+        maxW="1280px"
+        bg="blue.600"
+        color="white"
+      >
+        {session ? (
+          session.type === 'ttt' ? (
+            <TicTacToe />
+          ) : (
+            <SeaBattle />
+          )
         ) : (
-          <SeaBattle />
-        )
-      ) : (
-        <>
-          <GamesPanel />
-          <GamesSlider />
-        </>
-      )}
-    </Container>
+          <>
+            <GamesPanel />
+            <GamesSlider />
+          </>
+        )}
+      </Container>
+    </>
   );
 }
 

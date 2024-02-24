@@ -37,8 +37,13 @@ const controllerSlice = createSlice({
     resetGame: (_, { payload: session }: PayloadAction<string>) => {
       socket.emit('resetGame', session);
     },
-    joinSession: (_, { payload: session }: PayloadAction<string>) => {
-      socket.emit('joinSession', session);
+    joinSession: (
+      _,
+      {
+        payload: { session, name },
+      }: PayloadAction<{ session: string; name: string }>
+    ) => {
+      socket.emit('joinSession', session, name);
     },
     setBoard: (state, { payload: board }: PayloadAction<PlayerType[]>) => {
       state.board = board;

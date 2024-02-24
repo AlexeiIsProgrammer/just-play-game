@@ -14,11 +14,13 @@ import { PlayerType, SessionType, TypeOfGame } from '../types';
 export const socket = io(import.meta.env.VITE_BACKEND_URL);
 
 type InitialState = {
+  name: string;
   session: SessionType | null;
   player: PlayerType;
 };
 
 const initialState: InitialState = {
+  name: '',
   session: null,
   player: 'X',
 };
@@ -76,8 +78,13 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    createSession: (_, { payload: type }: PayloadAction<TypeOfGame>) => {
-      socket.emit('createSession', type);
+    createSession: (
+      _,
+      {
+        payload: { type, name },
+      }: PayloadAction<{ type: TypeOfGame; name: string }>
+    ) => {
+      socket.emit('createSession', type, name);
     },
     exitSession: () => {
       socket.emit('disconnectUser');
@@ -91,6 +98,9 @@ const userSlice = createSlice({
     setPlayer: (state, { payload }: PayloadAction<PlayerType>) => {
       state.player = payload;
     },
+    setName: (state, { payload: name }: PayloadAction<string>) => {
+      state.name = name;
+    },
   },
 });
 
@@ -101,5 +111,6 @@ export const {
   setPlayer,
   removeSessionUser,
   exitSession,
+  setName,
 } = userSlice.actions;
 export const userSelector = (state: RootState) => state.user;

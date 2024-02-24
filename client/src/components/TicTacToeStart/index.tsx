@@ -1,12 +1,13 @@
 import { Box, Button, Heading } from '@chakra-ui/react';
-import { createSession } from '../../redux/slices/userSlice';
-import { useAppDispatch } from '../../redux';
+import { createSession, userSelector } from '../../redux/slices/userSlice';
+import { useAppDispatch, useAppSelector } from '../../redux';
 
 function TicTacToeStart() {
+  const { name } = useAppSelector(userSelector);
   const dispatch = useAppDispatch();
 
   const createTicTacToeSessionHandle = () => {
-    dispatch(createSession('ttt'));
+    dispatch(createSession({ type: 'ttt', name }));
   };
 
   return (
