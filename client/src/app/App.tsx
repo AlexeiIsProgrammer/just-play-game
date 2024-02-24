@@ -1,133 +1,60 @@
-import { useState, useEffect, useRef } from 'react';
-import io, { Socket } from 'socket.io-client';
+import { useEffect } from 'react';
 import styles from './App.module.scss';
-
-type PlayerType = 'X' | 'O';
+import { Button, Container, Stack } from '@chakra-ui/react';
+import GamesSlider from '../components/GamesSlider';
+import { useAppDispatch, useAppSelector } from '../redux';
+import {
+  createSession,
+  startListening,
+  userSelector,
+} from '../redux/slices/userSlice';
+import {
+  controllerSelector,
+  makeMove,
+  resetGame,
+} from '../redux/slices/controllerSlice';
 
 function App() {
-  const [sessions, setSessions] = useState<string[]>([]);
-  const [currentSession, setCurrentSession] = useState<string>('');
-  const [board, setBoard] = useState<PlayerType[]>(Array(9).fill(null));
-  const [winner, setWinner] = useState<PlayerType | null>(null);
-  const [player, setPlayer] = useState<'X' | 'O'>('X');
-  const [currentMove, setCurrentMove] = useState<'X' | 'O' | null>(null);
-  const socket = useRef<null | Socket>(null);
+  const dispatch = useAppDispatch();
+  const { session, player } = useAppSelector(userSelector);
+  const { winner, currentMove, board } = useAppSelector(controllerSelector);
 
   useEffect(() => {
-    socket.current = io(import.meta.env.VITE_BACKEND_URL);
-
-    socket.current.on('showSessions', (sessions) => {
-      setSessions(sessions);
-    });
-
-    socket.current.on('sessionCreated', (sessionId) => {
-      setSessions([...sessions, sessionId]);
-    });
-
-    socket.current.on('sessionJoined', (sessionId, isFirstPlayer) => {
-      setPlayer(isFirstPlayer ? 'X' : 'O');
-      setCurrentSession(sessionId);
-    });
-
-    socket.current.on('userDisconnect', () => {
-      setCurrentSession('');
-    });
-
-    socket.current.on('sessionFull', () => {
-      setCurrentMove('X');
-    });
-
-    socket.current.on('resetGame', () => {
-      setBoard(Array(9).fill(null));
-      setWinner(null);
-      setCurrentMove('X');
-    });
-
-    socket.current.on('sessionNotFound', () => {
-      alert('Session not found!');
-    });
-
-    socket.current.on('move', (currentMove, board) => {
-      handleRemoteMove(currentMove, board);
-    });
-
-    return () => {
-      if (socket.current) socket.current.disconnect();
-    };
+    dispatch(startListening());
   }, []);
 
-  const createSession = () => {
-    if (socket.current) socket.current.emit('createSession');
+  const createSessionHandle = () => {
+    dispatch(createSession());
   };
 
-  const joinSession = (sessionId: string) => {
-    if (socket.current) {
-      socket.current.emit('joinSession', sessionId);
-    }
-  };
-
-  const makeMove = (ind: number) => {
+  const makeMoveHandle = (ind: number) => {
     if (
       board[ind] === null &&
+      session &&
+      session.users.length > 1 &&
       !winner &&
-      currentSession &&
-      socket.current &&
       currentMove === player
     ) {
-      socket.current.emit('move', {
-        sessionId: currentSession,
-        board,
-        ind,
-        currentMove,
-      });
+      dispatch(makeMove({ session, board, ind, currentMove }));
     }
   };
 
-  const handleRemoteMove = (
-    currentMove: 'X' | 'O',
-    currentBoard: PlayerType[]
-  ) => {
-    setCurrentMove(currentMove);
-    setBoard(currentBoard);
-    checkWinner(currentBoard);
+  const resetGameHandle = () => {
+    dispatch(resetGame(session?.id || ''));
   };
-
-  const checkWinner = (board: PlayerType[]) => {
-    const winConditions = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-
-    for (let condition of winConditions) {
-      const [a, b, c] = condition;
-      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-        setWinner(board[a]);
-        break;
-      }
-    }
-  };
-
-  const resetGame = () => {
-    socket.current?.emit('resetGame', currentSession);
-  };
+  console.log(session);
 
   return (
-    <div>
+    <Container centerContent maxW="2xl" bg="blue.600" color="white">
       <h1>Tic Tac Toe</h1>
-      {currentSession ? (
+      {session ? (
         <>
           <div className={styles.board}>
             {board.map((cell, ind) => (
               <div
                 key={ind}
                 className={styles.cell}
-                onClick={() => makeMove(ind)}
+                onClick={() => makeMoveHandle(ind)}
               >
                 {cell}
               </div>
@@ -140,27 +67,20 @@ function App() {
                 ? `Next Player: ${currentMove}`
                 : ''}
           </div>
-          <button onClick={resetGame}>Reset Game</button>
+          <Stack spacing={4} direction="row" align="center">
+            <Button onClick={resetGameHandle}>Reset Game</Button>
+          </Stack>
         </>
       ) : (
         <>
           <h2>Create or Join a Session</h2>
-          <button onClick={() => createSession()}>Create Session</button>
+          <Button onClick={() => createSessionHandle()}>Create Session</Button>
           <div>
-            <h3>Join Session:</h3>
-            <ul>
-              {sessions.map((sessionId) => (
-                <li key={sessionId}>
-                  <button onClick={() => joinSession(sessionId)}>
-                    Join {sessionId}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <GamesSlider />
           </div>
         </>
       )}
-    </div>
+    </Container>
   );
 }
 
