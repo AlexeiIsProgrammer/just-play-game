@@ -30,6 +30,8 @@ const controllerSlice = createSlice({
       state.sessions = sessions;
     },
     addSession: (state, { payload: session }: PayloadAction<SessionType>) => {
+      console.log(session);
+
       state.sessions.push(session);
     },
     resetGame: (_, { payload: session }: PayloadAction<string>) => {

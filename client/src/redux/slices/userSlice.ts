@@ -9,7 +9,7 @@ import {
   setSessions,
   setWinner,
 } from './controllerSlice';
-import { PlayerType, SessionType } from '../types';
+import { PlayerType, SessionType, TypeOfGame } from '../types';
 
 export const socket = io(import.meta.env.VITE_BACKEND_URL);
 
@@ -42,11 +42,12 @@ export const startListening = createAsyncThunk(
       }
     );
 
-    socket.on('userDisconnect', (userId: string) => {
-      dispatch(removeSessionUser(userId));
+    socket.on('userDisconnect', () => {
+      dispatch(removeSessionUser());
     });
 
     socket.on('sessionFull', (session: SessionType) => {
+      dispatch(setBoard(Array(9).fill(null)));
       dispatch(setSession(session));
       dispatch(setCurrentMove('X'));
     });
@@ -75,17 +76,17 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    createSession: () => {
-      socket.emit('createSession');
+    createSession: (_, { payload: type }: PayloadAction<TypeOfGame>) => {
+      socket.emit('createSession', type);
+    },
+    exitSession: () => {
+      socket.emit('disconnectUser');
     },
     setSession: (state, { payload: user }: PayloadAction<SessionType>) => {
       state.session = user;
     },
-    removeSessionUser: (state, { payload: userId }: PayloadAction<string>) => {
-      if (state.session)
-        state.session.users = state.session?.users.filter(
-          (user) => user !== userId
-        );
+    removeSessionUser: (state) => {
+      state.session = null;
     },
     setPlayer: (state, { payload }: PayloadAction<PlayerType>) => {
       state.player = payload;
@@ -94,6 +95,11 @@ const userSlice = createSlice({
 });
 
 export default userSlice.reducer;
-export const { setSession, createSession, setPlayer, removeSessionUser } =
-  userSlice.actions;
+export const {
+  setSession,
+  createSession,
+  setPlayer,
+  removeSessionUser,
+  exitSession,
+} = userSlice.actions;
 export const userSelector = (state: RootState) => state.user;
