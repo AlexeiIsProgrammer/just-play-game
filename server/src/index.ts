@@ -17,8 +17,14 @@ const io = new Server(server, {
 
 type PlayerType = "X" | "O";
 
+type UserType = {
+  id: string;
+  name: string;
+};
+
 type SessionType = {
-  users: string[];
+  users: UserType[];
+  type: "ttt" | "sea";
 };
 
 type SessionsType = {
@@ -34,13 +40,13 @@ io.on("connection", (socket) => {
     "showSessions",
     Object.keys(sessions).map((session) => ({
       id: session,
-      users: sessions[session].users,
+      ...sessions[session],
     }))
   );
 
-  socket.on("createSession", () => {
+  socket.on("createSession", (type, name) => {
     const sessionId = getUniqueId();
-    const newSession = {users: [socket.id]};
+    const newSession = {users: [{id: socket.id, name}], type};
     sessions[sessionId] = newSession;
 
     socket.join(sessionId);
@@ -55,9 +61,9 @@ io.on("connection", (socket) => {
     io.to(session).emit("resetGame");
   });
 
-  socket.on("joinSession", (sessionId) => {
+  socket.on("joinSession", (sessionId, name) => {
     if (sessions[sessionId].users && sessions[sessionId].users.length < 2) {
-      sessions[sessionId].users.push(socket.id);
+      sessions[sessionId].users.push({id: socket.id, name});
       socket.join(sessionId);
 
       const newClientSession = {...sessions[sessionId], id: sessionId};
@@ -67,12 +73,10 @@ io.on("connection", (socket) => {
 
       io.emit(
         "showSessions",
-        Object.keys(sessions)
-          .map((session) => ({
-            id: session,
-            users: sessions[session].users,
-          }))
-          .filter((session) => session.id !== sessionId)
+        Object.keys(sessions).map((session) => ({
+          id: session,
+          ...sessions[session],
+        }))
       );
     } else {
       io.to(socket.id).emit("sessionNotFound");
@@ -84,16 +88,28 @@ io.on("connection", (socket) => {
     io.to(session).emit("move", currentMove === "X" ? "O" : "X", board);
   });
 
-  socket.on("disconnect", () => {
+  const disconnectUser = () => {
     for (const sessionId in sessions) {
-      const disconnectedSession = sessions[sessionId].users.find((id) => id === socket.id);
+      const disconnectedSession = sessions[sessionId].users.find(({id}) => id === socket.id);
 
       if (disconnectedSession) {
-        io.to(sessionId).emit("userDisconnect", sessionId);
+        io.to(sessionId).emit("userDisconnect");
         delete sessions[sessionId];
+
+        io.emit(
+          "showSessions",
+          Object.keys(sessions).map((session) => ({
+            id: session,
+            ...sessions[session],
+          }))
+        );
       }
     }
-  });
+  };
+
+  socket.on("disconnect", disconnectUser);
+
+  socket.on("disconnectUser", disconnectUser);
 });
 
 server.listen(process.env.PORT || 4000, () => {
