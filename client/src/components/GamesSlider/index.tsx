@@ -45,7 +45,7 @@ function GamesSlider() {
   }, [sessions]);
 
   return (
-    <Box w="100%" marginY={sessions.length !== 0 ? '0' : 'auto'}>
+    <Box w="100%" marginY={'auto'}>
       <Heading m="5" textAlign="center" as="h2">
         {sessions.length !== 0
           ? 'Choose a game you want'
