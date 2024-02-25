@@ -1,5 +1,5 @@
-import { winConditions } from '../src/constants';
-import { PlayerType } from './../src/redux/types';
+import { winConditions } from '../constants';
+import { PlayerType } from '../redux/types';
 
 export const checkTicTacToeWinner = (board: PlayerType[]) => {
   for (const condition of winConditions) {

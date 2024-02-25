@@ -24,19 +24,11 @@ function TicTacToe() {
   useEffect(() => {
     if (!winner) return;
 
-    if (winner === player) {
-      toast({
-        position: 'top',
-        title: `You won the game!`,
-        status: 'success',
-      });
-    } else {
-      toast({
-        position: 'top',
-        title: `You lose the game!`,
-        status: 'error',
-      });
-    }
+    toast({
+      position: 'top',
+      title: winner === player ? `You won the game!` : `You lose the game!`,
+      status: winner === player ? 'success' : 'error',
+    });
   }, [winner]);
 
   const makeMoveHandle = (ind: number) => {

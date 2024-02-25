@@ -3,7 +3,14 @@ import { RootState } from '../index';
 import { io } from 'socket.io-client';
 import { addSession, setSessions } from './controllerSlice';
 import { SessionType, TypeOfGame } from '../types';
-import { startTicTacToeListening } from './ticTacToeSlice';
+import { setBoard, setWinner, startTicTacToeListening } from './ticTacToeSlice';
+import {
+  setBoard as setSeaBoard,
+  setWinner as setSeaWinner,
+  setOpponentBoard,
+  startSeaBattleListening,
+  setStartGame,
+} from './seaBattleSlice';
 
 export const socket = io(import.meta.env.VITE_BACKEND_URL);
 
@@ -30,6 +37,14 @@ export const startListening = createAsyncThunk(
 
     socket.on('userDisconnect', () => {
       dispatch(removeSessionUser());
+
+      dispatch(setBoard([]));
+      dispatch(setWinner(null));
+
+      dispatch(setStartGame(false));
+      dispatch(setOpponentBoard([]));
+      dispatch(setSeaBoard([]));
+      dispatch(setSeaWinner(null));
     });
 
     socket.on('sessionNotFound', () => {
@@ -37,6 +52,7 @@ export const startListening = createAsyncThunk(
     });
 
     dispatch(startTicTacToeListening({ socket }));
+    dispatch(startSeaBattleListening({ socket }));
   }
 );
 

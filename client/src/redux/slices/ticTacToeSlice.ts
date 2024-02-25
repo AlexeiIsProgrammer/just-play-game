@@ -3,7 +3,7 @@ import { RootState } from '../index';
 import { setSession, socket } from './userSlice';
 import { PlayerType, SessionType, WinnerType } from '../types';
 import { Socket } from 'socket.io-client';
-import { checkTicTacToeWinner } from '../../../utils/checkTicTacToeWinner';
+import { checkTicTacToeWinner } from '../../utils/checkTicTacToeWinner';
 
 type InitialState = {
   winner: WinnerType;
@@ -20,7 +20,7 @@ const initialState: InitialState = {
 };
 
 export const startTicTacToeListening = createAsyncThunk(
-  'user/startListening',
+  'user/startTicTacToeListening',
   async ({ socket }: { socket: Socket }, { dispatch }) => {
     socket.on('tic-tac-toe:sessionFull', (session: SessionType) => {
       dispatch(setBoard(Array(9).fill(null)));

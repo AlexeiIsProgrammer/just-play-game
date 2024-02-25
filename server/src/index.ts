@@ -3,6 +3,9 @@ import {createServer} from "http";
 import {Server} from "socket.io";
 import {config} from "dotenv";
 import getUniqueId from "./utils/getUniqueId";
+import {checkSeaBattleWinner} from "./utils/checkSeaBattlerWinner";
+import {PlayerType, SeaBattlePlayerType, SessionsType, TypeOfGame} from "./types";
+import isShipFullyDestroyed from "./utils/isShipFullyDestroyed";
 
 config();
 
@@ -14,24 +17,6 @@ const io = new Server(server, {
     origin: [process.env.REACT_APP_FRONTEND_URL || "http://localhost:5173"],
   },
 });
-
-type TypeOfGame = "ttt" | "sea";
-
-type PlayerType = "X" | "O";
-
-type UserType = {
-  id: string;
-  name: string;
-};
-
-type SessionType = {
-  users: UserType[];
-  type: "ttt" | "sea";
-};
-
-type SessionsType = {
-  [key: string]: SessionType;
-};
 
 const sessions: SessionsType = {};
 
@@ -69,7 +54,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sea-battle:resetGame", (session: string) => {
+    sessions[session].users.map((user) => ({...user, board: null}));
     io.to(session).emit("sea-battle:resetGame");
+  });
+
+  socket.on("sea-battle:ready", (session: string, board: SeaBattlePlayerType[], userId: string) => {
+    sessions[session].ready = (sessions[session].ready || 0) + 1;
+    const currentUser = sessions[session].users.find((user) => user.id === userId);
+    if (currentUser) {
+      currentUser.board = board;
+    }
+
+    if ((sessions[session].ready || 0) > 1) {
+      io.to(session).emit("sea-battle:ready");
+    }
   });
 
   socket.on("joinSession", (sessionId: string, name: string, type: TypeOfGame) => {
@@ -105,9 +103,31 @@ io.on("connection", (socket) => {
     io.to(session).emit("tic-tac-toe:move", currentMove === "X" ? "O" : "X", board);
   });
 
-  socket.on("sea-battle:move", ({session, board, ind, currentMove}: {session: string; board: PlayerType[]; ind: number; currentMove: "X" | "O"}) => {
-    board[ind] = currentMove;
-    io.to(session).emit("sea-battle:move", currentMove === "X" ? "O" : "X", board);
+  socket.on("sea-battle:move", ({session, ind, currentMove, userId}: {session: string; board: SeaBattlePlayerType[]; ind: number; currentMove: "X" | "O"; userId: string}) => {
+    const opponentUser = sessions[session].users.filter((user) => user.id !== userId)[0];
+
+    let nextMove = currentMove;
+    if (opponentUser.board) {
+      if (opponentUser.board[ind] === "K") {
+        opponentUser.board[ind] = "X";
+
+        isShipFullyDestroyed(opponentUser.board, ind);
+
+        if (checkSeaBattleWinner(opponentUser.board)) {
+          io.to(session).emit("sea-battle:win", currentMove);
+        }
+      } else {
+        nextMove = currentMove === "X" ? "O" : "X";
+        opponentUser.board[ind] = "O";
+      }
+
+      io.to(userId).emit(
+        "sea-battle:move",
+        nextMove,
+        opponentUser.board.map((cell) => (cell === "K" ? null : cell))
+      );
+      io.to(sessions[session].users.filter((user) => user.id !== userId)[0].id).emit("sea-battle:changeMove", nextMove, opponentUser.board);
+    }
   });
 
   const disconnectUser = () => {
