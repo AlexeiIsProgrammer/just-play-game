@@ -1,0 +1,48 @@
+$board-size: 400px;
+$cell-size: calc($board-size / 3);
+$border-color: #2c3e50;
+$cell-hover-color: #34495e;
+$cell-x-color: #e74c3c;
+$cell-o-color: #3498db;
+$board-bg: #ecf0f1;
+
+.board {
+  width: $board-size;
+  height: $board-size;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.cell {
+  width: $cell-size;
+  height: $cell-size;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: $board-bg;
+  border: 2px solid $border-color;
+  font-size: 2.5em;
+  color: transparent;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: $cell-hover-color;
+    cursor: pointer;
+  }
+
+  &.x {
+    background-color: $cell-x-color;
+    color: #fff;
+  }
+
+  &.o {
+    background-color: $cell-o-color;
+    color: #fff;
+  }
+
+  &.clicked {
+    cursor: default;
+  }
+}
