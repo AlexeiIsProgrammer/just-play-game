@@ -15,8 +15,6 @@ function SeaBattleBoard({ board, myBoard }: SeaBattleBoardType) {
   const { winner, currentMove, player } = useAppSelector(seaBattleSelector);
 
   const makeMoveHandle = (ind: number) => {
-    console.log('before', session);
-
     if (
       !myBoard &&
       board[ind] === null &&
@@ -25,7 +23,6 @@ function SeaBattleBoard({ board, myBoard }: SeaBattleBoardType) {
       !winner &&
       currentMove === player
     ) {
-      console.log('after');
       dispatch(makeMove({ session, ind, currentMove }));
     }
   };
