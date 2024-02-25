@@ -38,7 +38,8 @@ function NameModal() {
     }
   };
 
-  const changeHandle = (e) => setValue(e.target.value);
+  const changeHandle = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setValue(e.target.value);
 
   return (
     <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose}>

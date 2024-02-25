@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Center, Container } from '@chakra-ui/react';
+import { Container } from '@chakra-ui/react';
 import GamesSlider from '../components/GamesSlider';
 import { useAppDispatch, useAppSelector } from '../redux';
 import { startListening, userSelector } from '../redux/slices/userSlice';

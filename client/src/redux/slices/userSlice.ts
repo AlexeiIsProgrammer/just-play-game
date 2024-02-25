@@ -2,7 +2,7 @@ import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import { io } from 'socket.io-client';
 import { addSession, setSessions } from './controllerSlice';
-import { PlayerType, SessionType, TypeOfGame } from '../types';
+import { SessionType, TypeOfGame } from '../types';
 import { startTicTacToeListening } from './ticTacToeSlice';
 
 export const socket = io(import.meta.env.VITE_BACKEND_URL);
