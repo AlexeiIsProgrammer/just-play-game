@@ -1,5 +1,7 @@
 export type PlayerType = 'X' | 'O';
 
+export type WinnerType = PlayerType | null;
+
 export type TypeOfGame = 'ttt' | 'sea';
 
 export type UserType = {

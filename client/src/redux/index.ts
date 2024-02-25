@@ -2,11 +2,15 @@ import { configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useSelector, useDispatch } from 'react-redux';
 import userReducer from './slices/userSlice.ts';
 import controllerReducer from './slices/controllerSlice.ts';
+import ticTacToeReducer from './slices/ticTacToeSlice.ts';
+import seaBattleReducer from './slices/seaBattleSlice.ts';
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     controller: controllerReducer,
+    ticTacToe: ticTacToeReducer,
+    seaBattle: seaBattleReducer,
   },
 });
 

@@ -15,6 +15,8 @@ const io = new Server(server, {
   },
 });
 
+type TypeOfGame = "ttt" | "sea";
+
 type PlayerType = "X" | "O";
 
 type UserType = {
@@ -44,7 +46,7 @@ io.on("connection", (socket) => {
     }))
   );
 
-  socket.on("createSession", (type, name) => {
+  socket.on("createSession", (type: TypeOfGame, name) => {
     const sessionId = getUniqueId();
     const newSession = {users: [{id: socket.id, name}], type};
     sessions[sessionId] = newSession;
@@ -54,22 +56,36 @@ io.on("connection", (socket) => {
     const newClientSession = {...newSession, id: sessionId};
 
     io.emit("sessionCreated", newClientSession);
-    io.to(socket.id).emit("sessionJoined", newClientSession, true);
+
+    if (type === "ttt") {
+      io.to(socket.id).emit("tic-tac-toe:sessionJoined", newClientSession, true);
+    } else {
+      io.to(socket.id).emit("sea-battle:sessionJoined", newClientSession, true);
+    }
   });
 
-  socket.on("resetGame", (session: string) => {
-    io.to(session).emit("resetGame");
+  socket.on("tic-tac-toe:resetGame", (session: string) => {
+    io.to(session).emit("tic-tac-toe:resetGame");
   });
 
-  socket.on("joinSession", (sessionId, name) => {
+  socket.on("sea-battle:resetGame", (session: string) => {
+    io.to(session).emit("sea-battle:resetGame");
+  });
+
+  socket.on("joinSession", (sessionId: string, name: string, type: TypeOfGame) => {
     if (sessions[sessionId].users && sessions[sessionId].users.length < 2) {
       sessions[sessionId].users.push({id: socket.id, name});
       socket.join(sessionId);
 
       const newClientSession = {...sessions[sessionId], id: sessionId};
 
-      io.to(socket.id).emit("sessionJoined", newClientSession);
-      io.to(sessionId).emit("sessionFull", newClientSession);
+      if (type === "ttt") {
+        io.to(socket.id).emit("tic-tac-toe:sessionJoined", newClientSession);
+        io.to(sessionId).emit("tic-tac-toe:sessionFull", newClientSession);
+      } else {
+        io.to(socket.id).emit("sea-battle:sessionJoined", newClientSession);
+        io.to(sessionId).emit("sea-battle:sessionFull", newClientSession);
+      }
 
       io.emit(
         "showSessions",
@@ -83,9 +99,15 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("move", ({session, board, ind, currentMove}: {session: string; board: PlayerType[]; ind: number; currentMove: "X" | "O"}) => {
+  socket.on("tic-tac-toe:move", ({session, board, ind, currentMove}: {session: string; board: PlayerType[]; ind: number; currentMove: "X" | "O"}) => {
     board[ind] = currentMove;
-    io.to(session).emit("move", currentMove === "X" ? "O" : "X", board);
+
+    io.to(session).emit("tic-tac-toe:move", currentMove === "X" ? "O" : "X", board);
+  });
+
+  socket.on("sea-battle:move", ({session, board, ind, currentMove}: {session: string; board: PlayerType[]; ind: number; currentMove: "X" | "O"}) => {
+    board[ind] = currentMove;
+    io.to(session).emit("sea-battle:move", currentMove === "X" ? "O" : "X", board);
   });
 
   const disconnectUser = () => {

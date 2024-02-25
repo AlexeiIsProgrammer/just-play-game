@@ -1,32 +1,43 @@
 import { MoonIcon, SunIcon } from '@chakra-ui/icons';
-import {
-  Box,
-  Button,
-  Center,
-  Heading,
-  Stack,
-  Text,
-  useToast,
-} from '@chakra-ui/react';
+import { Button, Center, Heading, Stack, useToast } from '@chakra-ui/react';
 import { useAppDispatch, useAppSelector } from '../../redux';
 import { exitSession, userSelector } from '../../redux/slices/userSlice';
-import {
-  controllerSelector,
-  makeMove,
-  resetGame,
-} from '../../redux/slices/controllerSlice';
 
 import styles from './TicTacToe.module.scss';
 import { PlayerType } from '../../redux/types';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import {
+  makeMove,
+  resetGame,
+  ticTacToeSelector,
+} from '../../redux/slices/ticTacToeSlice';
 
 function TicTacToe() {
   const toast = useToast();
 
   const dispatch = useAppDispatch();
 
-  const { player, session } = useAppSelector(userSelector);
-  const { currentMove, winner, board } = useAppSelector(controllerSelector);
+  const { session } = useAppSelector(userSelector);
+  const { player, currentMove, winner, board } =
+    useAppSelector(ticTacToeSelector);
+
+  useEffect(() => {
+    if (!winner) return;
+
+    if (winner === player) {
+      toast({
+        position: 'top',
+        title: `You won the game!`,
+        status: 'success',
+      });
+    } else {
+      toast({
+        position: 'top',
+        title: `You lose the game!`,
+        status: 'error',
+      });
+    }
+  }, [winner]);
 
   const makeMoveHandle = (ind: number) => {
     if (
@@ -49,7 +60,7 @@ function TicTacToe() {
     dispatch(resetGame(session?.id || ''));
     toast({
       position: 'top',
-      title: `Player has reset the game`,
+      title: `Game has been resetted`,
       status: 'info',
       isClosable: true,
     });
@@ -84,13 +95,13 @@ function TicTacToe() {
         <Heading as="h5" textAlign="center">
           {session && session.users.length < 2
             ? 'Waiting for the second player..'
-            : winner
-              ? `Winner: ${winner}`
-              : currentMove
-                ? currentMove === player
+            : currentMove
+              ? winner
+                ? ''
+                : currentMove === player
                   ? 'Your move'
                   : "Opponent's move"
-                : ''}
+              : ''}
         </Heading>
         <Stack spacing={4} direction="column" align="center">
           {shouldBeGameResetted && (

@@ -26,6 +26,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { userSelector } from '../../redux/slices/userSlice';
+import { TypeOfGame } from '../../redux/types';
 
 function GamesSlider() {
   const dispatch = useAppDispatch();
@@ -33,8 +34,8 @@ function GamesSlider() {
   const { sessions } = useAppSelector(controllerSelector);
   const [swiper, setSwiper] = useState<any>();
 
-  const joinSessionHandle = (sessionId: string) => {
-    dispatch(joinSession({ session: sessionId, name }));
+  const joinSessionHandle = (sessionId: string, type: TypeOfGame) => {
+    dispatch(joinSession({ session: sessionId, name, type }));
   };
 
   useEffect(() => {
@@ -97,7 +98,7 @@ function GamesSlider() {
                 <Button
                   isDisabled={session.users.length > 1}
                   w="100%"
-                  onClick={() => joinSessionHandle(session.id)}
+                  onClick={() => joinSessionHandle(session.id, session.type)}
                 >
                   Join
                 </Button>
